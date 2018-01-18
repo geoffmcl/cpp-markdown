@@ -33,10 +33,12 @@ namespace {
 		bool debug() const { return mDebug; }
 		bool test() const { return mTest; }
 		std::string inputFile() const { return mInputFile; }
+        std::string outFile() const { return mOutputFile; }
 
 		private:
 		std::string mInputFile;
-		bool mDebug, mTest;
+        std::string mOutputFile;
+        bool mDebug, mTest;
 	};
 
 	bool Options::readOptions(int argc, char *argv[]) {
@@ -49,8 +51,27 @@ namespace {
 					mDebug=true;
 				} else if (opt=="test") {
 					mTest=true;
-				} else if (opt=="help") {
-					help=true;
+                } else if (opt == "help") {
+                    help = true;
+                } else if (opt == "out") {
+                    if ((x + 1) >= argc) {
+                        err = true;
+                        cerr << "Option " << argv[x] << " must be followed by output file, use -? for help."
+                            << endl;
+                    }
+                    else {
+                        x++;
+                        if (mOutputFile.empty()) {
+                            mOutputFile = argv[x];
+                        }
+                        else {
+                            err = true;
+                            cerr << "Too many parameters. Already had out '" << mOutputFile
+                                << "', found '" << argv[x] << "' too. Use -? for help."
+                                << endl;
+                        }
+
+                    }
 				} else {
 					err=true;
 					cerr << "Unknown option " << argv[x] << ", use -? for help."
@@ -63,7 +84,27 @@ namespace {
 					switch (*i) {
 						case '?': help=true; break;
 						case 'd': mDebug=true; break;
+                        case 'o':
+                            if ((x + 1) >= argc) {
+                                err = true;
+                                cerr << "Option " << argv[x] << " must be followed by output file, use -? for help."
+                                    << endl;
+                            }
+                            else {
+                                x++;
+                                if (mOutputFile.empty()) {
+                                    mOutputFile = argv[x];
+                                }
+                                else {
+                                    err = true;
+                                    cerr << "Too many parameters. Already had output '" << mOutputFile
+                                        << "', found '" << argv[x] << "' too. Use -? for help."
+                                        << endl;
+                                }
 
+                            }
+
+                            break;
 						default:
 						err=true;
 						cerr << "Uknown option flag '" << *i << "', use -? for "
@@ -93,16 +134,17 @@ namespace {
 	}
 
 	void Options::showHelp() {
-		const char *cHelpScreen=
-			"This program converts input (from an input file or stdin) from Markdown syntax\n"
-			"to HTML using the cpp-markdown library.\n"
-			"\n"
-			"Usage:\n"
-			"    cpp-markdown [<option>...] [input-file]\n"
-			"\n"
-			"Available options are:\n"
-			"    -?, --help      Show this screen.\n"
-			"    -d, --debug     Show tokens instead of HTML output.\n";
+        const char *cHelpScreen =
+            "This program converts input (from an input file or stdin) from Markdown syntax\n"
+            "to HTML using the cpp-markdown library.\n"
+            "\n"
+            "Usage:\n"
+            "    cpp-markdown [<option>...] [input-file]\n"
+            "\n"
+            "Available options are:\n"
+            "    -?, --help      Show this screen.\n"
+            "    -d, --debug     Show tokens instead of HTML output.\n"
+            "    -o, --out file  Write output to this file.\n";
 		cerr << endl << cHelpScreen << endl;
 	}
 
@@ -117,8 +159,11 @@ int main(int argc, char *argv[]) {
 //	}
 
 	std::ifstream ifile;
+    std::ofstream oFile;
 
 	std::istream *in=&std::cin;
+    std::ostream *out = &std::cout;
+
 	if (!cfg.inputFile().empty()) {
 		cerr << "Reading file '" << cfg.inputFile() << "'..." << endl;
 		ifile.open(cfg.inputFile().c_str());
@@ -131,8 +176,21 @@ int main(int argc, char *argv[]) {
 	markdown::Document doc;
 	doc.read(*in);
 
-	if (cfg.debug()) doc.writeTokens(cout);
-	else doc.write(cout);
+    if (cfg.outFile().size()) {
+        cerr << "Writing file '" << cfg.outFile() << "'..." << endl;
+        oFile.open(cfg.outFile().c_str());
+        if (!oFile) {
+            cerr << "Error: Can't open out file." << endl;
+            return 1;
+        }
+        else out = &oFile;
+
+    }
+
+	if (cfg.debug()) doc.writeTokens(*out);
+	else doc.write(*out);
 
 	return 0;
 }
+
+/* eof */
