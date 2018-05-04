@@ -47,6 +47,8 @@ Cpp-Markdown is released under the MIT license. See the LICENSE.TXT file that ac
 
 The original fork is in the `master` branch...
 
-Current development is in the `newbranch`, the **default**
+Some development was done in the `newbranch` branch...
+
+20180504: Current development is in the `next` branch, the **default**
 
 ; eof
