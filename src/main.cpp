@@ -29,6 +29,7 @@ namespace {
 		int readOptions(int argc, char *argv[]);
 
 		void showHelp();
+        void showVersion();
 
 		bool debug() const { return mDebug; }
 		bool test() const { return mTest; }
@@ -41,90 +42,67 @@ namespace {
         bool mDebug, mTest;
 	};
 
-	int Options::readOptions(int argc, char *argv[]) {
+	int Options::readOptions(int argc, char *argv[]) 
+    {
+        int x, c, x2;
 		bool help=false, err=false;
-		for (int x=1; x<argc && !help && !err; ++x) {
-			if (argv[x][0]=='-' && argv[x][1]=='-' && argv[x][2]!=0) {
-				// It's a full-word option.
-				std::string opt(argv[x]+2);
-				if (opt=="debug") {
-					mDebug=true;
-				} else if (opt=="test") {
-					mTest=true;
-                } else if (opt == "help") {
+        char *arg, *sarg;
+        for (x = 1; x < argc && !help && !err; x++) {
+            arg = argv[x];
+            x2 = x + 1;
+            c = *arg;
+            if (c == '-') {
+                sarg = &arg[1];
+                while (*sarg == '-')
+                    sarg++;
+                c = *sarg;
+                switch (c) {
+                case 'v':
+                    showVersion();
+                    return 2;
+                case 'h':
+                case '?':
                     help = true;
-                } else if (opt == "out") {
-                    if ((x + 1) >= argc) {
-                        err = true;
-                        cerr << "Option " << argv[x] << " must be followed by output file, use -? for help."
-                            << endl;
-                    }
-                    else {
+                    break;
+                case 'd':
+                    mDebug = true;
+                    break;
+                case 'o':
+                    if (x2 < argc) {
                         x++;
+                        sarg = argv[x];
                         if (mOutputFile.empty()) {
-                            mOutputFile = argv[x];
+                            mOutputFile = sarg;
                         }
                         else {
                             err = true;
                             cerr << "Too many parameters. Already had out '" << mOutputFile
-                                << "', found '" << argv[x] << "' too. Use -? for help."
+                                << "', found '" << arg << "' too. Use -? for help."
                                 << endl;
                         }
-
                     }
-				} else {
-					err=true;
-					cerr << "Unknown option " << argv[x] << ", use -? for help."
-						<< endl;
-				}
-			} else if (argv[x][0]=='-') {
-				// It's one or more option flags.
-				const char *i=argv[x]+1;
-				while (*i!=0 && !help && !err) {
-					switch (*i) {
-						case '?': help=true; break;
-						case 'd': mDebug=true; break;
-                        case 'o':
-                            if ((x + 1) >= argc) {
-                                err = true;
-                                cerr << "Option " << argv[x] << " must be followed by output file, use -? for help."
-                                    << endl;
-                            }
-                            else {
-                                x++;
-                                if (mOutputFile.empty()) {
-                                    mOutputFile = argv[x];
-                                }
-                                else {
-                                    err = true;
-                                    cerr << "Too many parameters. Already had output '" << mOutputFile
-                                        << "', found '" << argv[x] << "' too. Use -? for help."
-                                        << endl;
-                                }
-
-                            }
-
-                            break;
-						default:
-						err=true;
-						cerr << "Uknown option flag '" << *i << "', use -? for "
-							"help." << endl;
-					}
-					++i;
-				}
-			} else {
-				// It's a parameter.
-				if (mInputFile.empty()) {
-					mInputFile=argv[x];
-				} else {
-					err=true;
-					cerr << "Too many parameters. Already had '" << mInputFile
-						<< "', found '" << argv[x] << "' too. Use -? for help."
-						<< endl;
-				}
-			}
-		}
-
+                    else {
+                        err = true;
+                        cerr << "Option " << arg << " must be followed by output file, use -? for help." << endl;
+                    }
+                    break;
+                default:
+                    err = true;
+                    cerr << "Unknown option " << arg << ", use -? for help." << endl;
+                    break;
+                }
+            }
+            else {
+                if (mInputFile.empty()) {
+                    mInputFile = arg;
+                }
+                else {
+                    err = true;
+                    cerr << "Too many parameters. Already had '" << mInputFile
+                        << "', found '" << arg << "' too. Use -? for help." << endl;
+                }
+            }
+        }
 		if (help) {
 			showHelp();
 			return 2;
@@ -134,19 +112,25 @@ namespace {
         return 0;
 	}
 
+    void Options::showVersion() {
+        const char *cVersion =
+            "cpp-markdown: Version: " MD_VERSION ", Date: " MD_DATE " ";
+        cerr << endl << cVersion << endl;
+    }
+
 	void Options::showHelp() {
         const char *cHelpScreen =
-            "This program converts input (from an input file or stdin) from Markdown syntax\n"
-            "to HTML using the cpp-markdown library.\n"
-            "\n"
-            "Usage:\n"
-            "    cpp-markdown [<option>...] [input-file]\n"
-            "\n"
-            "Available options are:\n"
-            "    -?, --help      Show this screen.\n"
+            "Usage: cpp-markdown [options...] [input-file]\n"
+            "Options:\n"
+            "    -v, --version   Show version, and exit(0).\n"
+            "    -?, --help      Show this screen, and exit(0).\n"
             "    -d, --debug     Show tokens instead of HTML output.\n"
-            "    -o, --out file  Write output to this file.\n";
-		cerr << endl << cHelpScreen << endl;
+            "    -o, --out file  Write output to this file.\n"
+            "\n"
+            "  This program converts input (from an input file or stdin) from Markdown syntax\n"
+            "  to HTML using the 'cppmarkdown' library.\n";
+        showVersion();
+        cerr << cHelpScreen << endl;
 	}
 
 } // namespace
