@@ -151,6 +151,32 @@ namespace {
 
 } // namespace
 
+const char *cDefHead =
+"<!DOCTYPE html>\n"
+"<head lang=\"en\">\n"
+"<meta charset=\"utf-8\">\n"
+"<title>md2html</title>\n"
+"<style>\n"
+"code {\n"
+"    background-color: #f8f8f8;\n"
+"}\n"
+".blk {\n"
+"    display: block;\n"
+"}\n"
+"pre {\n"
+"    display: block;\n"
+"    width: 100%;\n"
+"    background-color: #f8f8f8;\n"
+"    padding: 6px 2em 6px 2em;\n"
+"    border: 1px solid #ddd;\n"
+"}\n"
+".p {\n"
+"    color: #6f00b1;\n"
+"    background-color: #ffffff;\n"
+"}\n"
+"</style>\n"
+"</head>\n";
+
 int main(int argc, char *argv[]) 
 {
     int iret = 0;
@@ -199,7 +225,15 @@ int main(int argc, char *argv[])
         doc.writeTokens(*out);
     }
     else {
-        doc.write(*out);
+        std::stringstream ss;
+        std::string s;
+        s = cDefHead;
+        s += "<body>\n";
+        doc.write(ss);  // add the body html
+        s += ss.str();  // add to output
+        s += "</body>\n";
+        s += "</html>\n";
+        *out << s; // send it to the output - std::cout or file
     }
 	return iret;
 }
