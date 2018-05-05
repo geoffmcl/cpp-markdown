@@ -4,6 +4,36 @@ cmake_minimum_required(VERSION 2.8)
 
 project(cpp-markdown)
 
+# add a VERSION and DATE
+file(READ version.txt versionFile)
+if (NOT versionFile)
+    message(FATAL_ERROR "Unable to determine cpp-markdown version. version.txt file is missing.")
+endif()
+string(STRIP "${versionFile}" VERSION_TEXT)
+string(REGEX REPLACE "(.*)[\r\n|\n](.*)" "\\1" APP_VERSION ${VERSION_TEXT})
+string(REGEX REPLACE "(.*)[\r\n|\n](.*)" "\\2" APP_DATE ${VERSION_TEXT})
+# Establish version number
+if (APP_VERSION)
+    string(REPLACE "." ";" VERSION_LIST ${APP_VERSION})
+    list(GET VERSION_LIST 0 MD_MAJOR)
+    list(GET VERSION_LIST 1 MD_MINOR)
+    list(GET VERSION_LIST 2 MD_POINT)
+else ()
+    message(FATAL_ERROR "*** FAILED to get a VERSION from version.txt!")
+endif ()
+# Establish version date
+if (APP_DATE)
+    string(REPLACE "." ";" DATE_LIST ${APP_DATE})
+    list(GET DATE_LIST 0 APP_YEAR)
+    list(GET DATE_LIST 1 APP_MONTH)
+    list(GET DATE_LIST 2 APP_DAY)
+else ()
+    message(FATAL_ERROR "*** FAILED to get a DATE from version.txt!")
+endif ()
+
+add_definitions ( -DMD_VERSION="${APP_VERSION}" )
+add_definitions ( -DMD_DATE="${APP_YEAR}/${APP_MONTH}/${APP_DAY}" )
+
 if (MSVC)
     set( CMAKE_DEBUG_POSTFIX "d" ) # little effect in unix
 endif ()
