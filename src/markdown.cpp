@@ -227,6 +227,51 @@ optional<TokenPtr> parseCodeBlock(CTokenGroupIter& i, CTokenGroupIter end) {
 	return none;
 }
 
+/* 
+    bool IsThreeTicks(const std::string &line)
+    Check the line begins with 3 backticks, '```'
+    For now ignore any following text
+*/
+bool IsThreeTicks(const std::string &line) {
+    if (line.length() >= 3) {
+        std::string::const_iterator si = line.begin(), sie = si + 3;
+        while (si != sie && *si == '`') ++si;
+        if (si == sie) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
+    Check for block beginning of three backticks, '```'
+    Consume tokens until the next three backticks
+    If block found add a 'CodeBlock' for the lines between..
+*/
+optional<TokenPtr> parseThreeTicks(CTokenGroupIter& i, CTokenGroupIter end) {
+    if (!(*i)->isBlankLine()) {
+        const std::string line(*(*i)->text());
+        if (IsThreeTicks(line)) {
+            std::ostringstream out;
+            int count = 0;
+            while (i != end) {
+                ++i;    /* bump to next token */
+                if (i != end) {
+                    const std::string content(*(*i)->text());
+                    if (!IsThreeTicks(content)) {
+                        count++;
+                        out << content << '\n'; /* add line */
+                    }
+                    else break;
+                }
+            }
+            if (count)
+                return TokenPtr(new markdown::token::CodeBlock(out.str()));
+        }
+    }
+    return none;
+}
+
 
 
 size_t countQuoteLevel(const std::string& prefixString) {
@@ -774,6 +819,8 @@ void Document::_processBlocksItems(TokenPtr inTokenContainer) {
 			if (!subitem) subitem=parseListBlock(ii, iie);
 			if (!subitem) subitem=parseBlockQuote(ii, iie);
 			if (!subitem) subitem=parseCodeBlock(ii, iie);
+            if (!subitem) /* check for 3 backticks block */
+                subitem = parseThreeTicks(ii, iie);
 
 			if (subitem) {
 				_processBlocksItems(*subitem);
