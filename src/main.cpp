@@ -26,7 +26,7 @@ namespace {
 		public:
 		Options(): mDebug(false), mTest(false) { }
 
-		bool readOptions(int argc, char *argv[]);
+		int readOptions(int argc, char *argv[]);
 
 		void showHelp();
 
@@ -41,7 +41,7 @@ namespace {
         bool mDebug, mTest;
 	};
 
-	bool Options::readOptions(int argc, char *argv[]) {
+	int Options::readOptions(int argc, char *argv[]) {
 		bool help=false, err=false;
 		for (int x=1; x<argc && !help && !err; ++x) {
 			if (argv[x][0]=='-' && argv[x][1]=='-' && argv[x][2]!=0) {
@@ -127,10 +127,11 @@ namespace {
 
 		if (help) {
 			showHelp();
-			return false;
+			return 2;
 		} else if (err) {
-			return false;
-		} else return true;
+			return 1;
+		} 
+        return 0;
 	}
 
 	void Options::showHelp() {
@@ -150,9 +151,16 @@ namespace {
 
 } // namespace
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) 
+{
+    int iret = 0;
 	Options cfg;
-	if (!cfg.readOptions(argc, argv)) return 1;
+    iret = cfg.readOptions(argc, argv);
+    if (iret) {
+        if (iret == 2)
+            iret = 0;
+        return iret;
+    }
 
 //	if (cfg.test()) {
 //		return 1;
@@ -161,7 +169,7 @@ int main(int argc, char *argv[]) {
 	std::ifstream ifile;
     std::ofstream oFile;
 
-	std::istream *in=&std::cin;
+	std::istream *in = &std::cin;
     std::ostream *out = &std::cout;
 
 	if (!cfg.inputFile().empty()) {
@@ -187,10 +195,13 @@ int main(int argc, char *argv[]) {
 
     }
 
-	if (cfg.debug()) doc.writeTokens(*out);
-	else doc.write(*out);
-
-	return 0;
+    if (cfg.debug()) {
+        doc.writeTokens(*out);
+    }
+    else {
+        doc.write(*out);
+    }
+	return iret;
 }
 
 /* eof */
