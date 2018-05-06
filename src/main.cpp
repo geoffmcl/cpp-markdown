@@ -14,7 +14,7 @@
 #include <string>
 
 #include <boost/optional.hpp>
-//#include <boost/regex.hpp> // For the 'test' option
+#include <boost/regex.hpp> // For the 'test' option
 
 #include "markdown.h"
 
