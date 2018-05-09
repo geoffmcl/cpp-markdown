@@ -12,3 +12,6 @@ cmake_install.cmake
 *.dir/*
 *.sln
 x64/*
+Makefile
+libcppmarkdown.a
+
