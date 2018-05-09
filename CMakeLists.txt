@@ -58,6 +58,9 @@ set(${name}_SRCS
 	${dir}/markdown-tokens.cpp
     )
 add_library(${name} ${${name}_SRCS})
+if (UNIX)
+    set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
+endif ()
 target_include_directories(${name} PUBLIC src)
 ### target_link_libraries(${name} PUBLIC boost_regex)
 list(APPEND add_LIBS ${name})
@@ -70,6 +73,9 @@ set(${name}_SRCS
     ${dir}/main.cpp
     )
 add_executable(${name} ${${name}_SRCS})
+if (UNIX)
+    set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
+endif ()
 target_link_libraries(${name} ${add_LIBS})
 if (MSVC)
     set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
