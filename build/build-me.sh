@@ -85,8 +85,9 @@ for arg in $@; do
          -h) give_help ;;
          -\?) give_help ;;
          *)
-            echo "$BN: ERROR: Invalid argument [$arg]"
-            exit 1
+            #echo "$BN: ERROR: Invalid argument [$arg]"
+            #exit 1
+            TMPOPTS="$TMPOPTS $arg"
             ;;
       esac
 done
