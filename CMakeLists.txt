@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(cpp-markdown)
 
+option( BUILD_SEP_LIBRARY "Set ON to build the 'cppmarkdown' library separately" OFF )
+
 # add a VERSION and DATE
 file(READ version.txt versionFile)
 if (NOT versionFile)
@@ -42,28 +44,28 @@ endif ()
 set(Boost_USE_STATIC_LIBS ON) 
 ### set(Boost_USE_MULTITHREADED ON)  
 ### set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost COMPONENTS iostreams regex REQUIRED)
+find_package(Boost COMPONENTS regex REQUIRED)
 message(STATUS "*** Found Boost inc ${Boost_INCLUDE_DIRS}, lib ${Boost_LIBRARIES}")
 include_directories( ${Boost_INCLUDE_DIRS} )
 list(APPEND add_LIBS ${Boost_LIBRARIES} )
 
 ##########################################################
 ### LIBRARY
-set(name cppmarkdown)
-set(dir src)
-set(${name}_SRCS
-    ${dir}/markdown.h
-	${dir}/markdown.cpp
-	${dir}/markdown-tokens.h
-	${dir}/markdown-tokens.cpp
-    )
-add_library(${name} ${${name}_SRCS})
-if (UNIX)
-    set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
+if (BUILD_SEP_LIBRARY)
+    set(name cppmarkdown)
+    set(dir src)
+    set(${name}_SRCS
+        ${dir}/markdown.h
+	    ${dir}/markdown.cpp
+	    ${dir}/markdown-tokens.h
+	    ${dir}/markdown-tokens.cpp
+        )
+    add_library(${name} ${${name}_SRCS})
+    #if (UNIX)
+    #    set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
+    #endif ()
+    list(APPEND add_LIBS ${name})
 endif ()
-target_include_directories(${name} PUBLIC src)
-### target_link_libraries(${name} PUBLIC boost_regex)
-list(APPEND add_LIBS ${name})
 
 ###########################################################
 ### EXECUTABLE
@@ -72,13 +74,23 @@ set(dir src)
 set(${name}_SRCS 
     ${dir}/main.cpp
     )
-add_executable(${name} ${${name}_SRCS})
-if (UNIX)
-    set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
+if (NOT BUILD_SEP_LIBRARY)
+    list(APPEND ${name}_SRCS
+        ${dir}/markdown.h
+    	${dir}/markdown.cpp
+    	${dir}/markdown-tokens.h
+    	${dir}/markdown-tokens.cpp
+    	)
 endif ()
+add_executable(${name} ${${name}_SRCS})
+#if (UNIX)
+#    set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
+#endif ()
 target_link_libraries(${name} ${add_LIBS})
 if (MSVC)
     set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
 endif ()
+# deal with install, if any...
+install( TARGETS ${name} DESTINATION bin )
 
 # eof
